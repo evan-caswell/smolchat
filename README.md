@@ -29,7 +29,7 @@ It provides a simple way to interact with small open-source LLMs like **SmolLM2*
 docker compose up --build
 ```
 
-- Backend: http://localhost:8000/chat/healthz  
+- Backend: http://localhost:8000  
 - Frontend: http://localhost:8501  
 
 ---
