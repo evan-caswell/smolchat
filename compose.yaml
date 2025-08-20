@@ -1,0 +1,31 @@
+services:
+  api:
+    build: ./backend
+    container_name: smolchat-api
+    environment:
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      MODEL_ID: ${MODEL_ID}
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    networks: [appnet]
+    volumes:
+      - ./backend:/app
+
+  ui:
+    build: ./frontend
+    container_name: smolchat-ui
+    environment:
+      API_URL: ${API_BASE_URL}
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    networks: [appnet]
+    volumes:
+      - ./frontend:/app
+
+networks:
+  appnet:
+    driver: bridge
