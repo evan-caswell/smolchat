@@ -40,7 +40,7 @@ Environment variables:
 - `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
 - `OPENAI_BASE_URL` → model API base (default: `http://model-runner.docker.internal/engines/v1`)  
 - `OPENAI_API_KEY` → API key (use `dmr` for Docker Model Runner)  
-- `API_URL` → backend URL for Streamlit UI (default: `http://api:8000`)  
+- `API_BASE_URL` → backend URL for Streamlit UI (default: `http://api:8000`)  
 
 ---
 
