@@ -3,6 +3,8 @@
 SmolChat is a lightweight chat interface powered by [FastAPI](https://fastapi.tiangolo.com/), [Streamlit](https://streamlit.io/), and [Docker Model Runner](https://github.com/docker-model-runner).  
 It provides a simple way to interact with small open-source LLMs like **SmolLM2**, exposing an OpenAI-compatible `/chat/completions` API and a Streamlit web UI.
 
+This repository is meant to show how any local model pulled with Docker Model Runner can be used and interacted with through a backend. The capabilities of small, locally run models, will also be explored.
+
 ---
 
 ## Features
@@ -51,7 +53,10 @@ Environment variables:
 - [x] Provide Streamlit-based chat UI.  
 - [x] Dockerize backend and frontend with `docker compose`.
 
-### Phase 2 – Tool Use Integration  
+### Phase 2 – Structured Output
+- [ ] Add support for structured output from the model.
+
+### Phase 3 – Tool Use Integration  
 - [ ] Add support for **function calling** (OpenAI-style `functions` and `tool_calls`) in backend schemas.  
 - [ ] Define a standard tool registry (e.g., weather lookup, calculator, file search).  
 - [ ] Implement dynamic dispatch: model chooses tool → backend executes tool → response is returned to model.  
