@@ -55,11 +55,17 @@ docker compose up --build
 
 ## Configuration
 
-Local Environment variables:
+Local environment variables:
+- `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
+- `DMR_BASE_URL` → model API base (default: `http://localhost:12434/engines/llama.cpp/v1/chat/completions`)  
+- `DMR_API_KEY` → API key (use `dmr` for Docker Model Runner)  
+- `API_BASE_URL` → backend URL for FastAPI (default: `http://localhost:8000`)
+
+Docker environment variables:
 - `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
 - `DMR_BASE_URL` → model API base (default: `http://model-runner.docker.internal/engines/llama.cpp/v1/chat/completions`)  
 - `DMR_API_KEY` → API key (use `dmr` for Docker Model Runner)  
-- `API_BASE_URL` → backend URL for FastAPI (default: `http://localhost:8000`)
+- `API_BASE_URL` → backend URL for FastAPI (default: `http://api:8000`)
 ---
 
 ## Roadmap
@@ -73,8 +79,17 @@ Local Environment variables:
 - [x] Add support for structured output from the model.
 - [x] Validate data sent from the from the frontend using Pydantic
 
-### Phase 3 – Tool Use Integration  
+### Phase 3 - Unit Tests
+- [ ] Add unit tests (pytest)
+
+### Phase 4 – Tool Use Integration  
 - [ ] Add support for **function calling** (OpenAI-style `functions` and `tool_calls`) in backend schemas.  
 - [ ] Define a standard tool registry (e.g., weather lookup, calculator, file search).  
 - [ ] Implement dynamic dispatch: model chooses tool → backend executes tool → response is returned to model.  
 - [ ] Extend Streamlit UI to visualize tool usage steps.
+
+### Phase 5 - RAG
+- [ ] Implement RAG (local file QA)
+
+### Phase 6 - UI
+- [ ] Replace Streamlit frontend with React
