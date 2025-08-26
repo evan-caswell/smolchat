@@ -1,8 +1,8 @@
 # SmolChat
 
-SmolChat is a lightweight chat interface powered by [FastAPI](https://fastapi.tiangolo.com/), [Streamlit](https://streamlit.io/), and [Docker Model Runner](https://github.com/docker-model-runner).  
+SmolChat is a lightweight chat interface powered by [FastAPI](https://fastapi.tiangolo.com/), [Streamlit](https://streamlit.io/), and [Docker Model Runner (DMR)](https://github.com/docker-model-runner).  
 
-It provides a simple way to interact with small open-source LLMs like **SmolLM2**, exposing an OpenAI-compatible `/chat/completions` API and a Streamlit web UI. The app
+It provides a simple way to interact with small open-source LLMs like **SmolLM2**, exposing an OpenAI-compatible `/chat` API and a Streamlit web UI. The app
 allows you to adjust all of the input parameters given to the model and shows how to obtain structured JSON output from the model.
 
 the purpose of this project is to explore the capabilities of "small" LLMs that can be comfortably run on average consumer hardware.
@@ -14,7 +14,7 @@ the purpose of this project is to explore the capabilities of "small" LLMs that 
   - `/chat` endpoint accepts OpenAI-style chat messages.  
   - `/structured` endpoint gets structured output from the model.
   - Health check at `/healthz`.  
-  - Forwards requests to Docker Model Runner.
+  - Forwards requests to DMR.
 
 - **Streamlit frontend**  
   - Simple chat UI at `http://localhost:8501`.  
@@ -22,14 +22,23 @@ the purpose of this project is to explore the capabilities of "small" LLMs that 
   - Displays model responses and usage stats.
 
 - **Local deployment**
-  - Accesses the model from docker model runner through TCP
+  - Accesses the model from DMR through TCP
 
 - **Dockerized deployment**  
-  - Separate backend (`api`) and frontend (`ui`) containers built with docker compose.
+  - Separate backend (`api`) and frontend (`ui`) containers built with Docker Compose.
 
 ---
 
 ## Quickstart
+
+Ensure Docker Desktop is running, DMR is enabled, and host-side TCP support is enabled:
+
+- Settings->Beta Features->Enable Docker Model Runner
+
+If not developing in a container:
+
+- Enable host-side TCP support with port `12434`
+- Add the API address to CORS Allowed Origins (`http://localhost:8000`)
 
 ### Local
 Run each service individually:
@@ -63,7 +72,7 @@ Local environment variables:
 
 Docker environment variables:
 - `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
-- `DMR_BASE_URL` → model API base (default: `http://model-runner.docker.internal/engines/llama.cpp/v1/chat/completions`)  
+- `DMR_BASE_URL` → model API base (default: `http://model-runner.docker.internal/engines/v1/chat/completions`)  
 - `DMR_API_KEY` → API key (use `dmr` for Docker Model Runner)  
 - `API_BASE_URL` → backend URL for FastAPI (default: `http://api:8000`)
 ---
