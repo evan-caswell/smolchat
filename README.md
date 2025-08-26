@@ -49,7 +49,7 @@ streamlit run frontend/app.py
 docker compose up --build
 ```
 
-- Backend: http://localhost:8000/chat/healthz  
+- Backend: http://localhost:8000  
 - Frontend: http://localhost:8501  
 
 ---
