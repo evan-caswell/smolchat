@@ -2,22 +2,22 @@ services:
   api:
     build: ./backend
     container_name: smolchat-api
+    env_file: .env.docker
     environment:
-      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      MODEL_ID: ${MODEL_ID}
+      PYTHONPATH: /app            # parent of "backend" is on the path
       PORT: 8000
+    working_dir: /app
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ./backend:/app/backend    # <-- mount under /app/backend
     ports:
       - "8000:8000"
     networks: [appnet]
-    volumes:
-      - ./backend:/app
 
   ui:
     build: ./frontend
     container_name: smolchat-ui
-    environment:
-      API_URL: ${API_BASE_URL}
+    env_file: .env.docker
     ports:
       - "8501:8501"
     depends_on:

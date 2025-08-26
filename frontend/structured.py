@@ -1,28 +1,19 @@
-import json
-import httpx
 import streamlit as st
+import httpx
 from typing import Any
 from ui_defaults import DV
 from settings import get_settings
 
 API_BASE_URL = get_settings().API_BASE_URL
 
-st.set_page_config("SmolLM2 Chat", layout="centered")
-st.title("SmolLM2 — Chat")
-
-if "history" not in st.session_state:
-    st.session_state.history = [
-        {"role": "system", "content": "You are a helpful assistant."}
-    ]
-
+st.set_page_config(page_title="SmolLM2 - Structured Output", layout="centered")
+st.title("SmolLM2 - Structured Output")
 
 with st.sidebar:
-    if st.button("Reset Chat", use_container_width=True):
-        st.session_state.history = [
-            {"role": "system", "content": "You are a helpful assistant."}
-        ]
-        st.rerun()
+    st.header("Schema")
+    response_type = st.radio("Response type", ["Recipe", "Event"])
 
+    st.divider()
     st.header("Model Settings")
 
     if st.button("Reset Model Settings", use_container_width=True):
@@ -119,62 +110,46 @@ with st.sidebar:
         key="mirostat_eta",
     )
 
-for msg in st.session_state.history:
-    if msg["role"] != "system":
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+# Example: get current settings as a dict
+settings = {k: st.session_state[k] for k in DV.keys()}
 
-prompt = st.chat_input("Ask SmolLM2 anything…")
-if prompt:
-    st.session_state.history.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+with st.form(key="prompt_form", clear_on_submit=True):
+    prompt = st.text_area("Prompt")
+    submitted = st.form_submit_button("Send")
 
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        placeholder.markdown("_thinking…_")
-
-    settings: dict[str, Any] = {k: st.session_state[k] for k in DV.keys()}
-    payload = {
-        "messages": st.session_state.history,
-    } | settings
-
-    if payload["seed"] == 0:
-        payload["seed"] = None
-
-    s = (
-        payload.get("stop") or ""
-    ).strip()  # pyright: ignore[reportAttributeAccessIssue]
-    payload["stop"] = None if not s else [w.strip() for w in s.split(",") if w.strip()]
-
-    url = f"{API_BASE_URL}chat"
-    try:
-        with httpx.Client(timeout=60.0) as client:
-            r = client.post(url=url, json=payload)
-            r.raise_for_status()
-            data = r.json()
-    except Exception as e:
-        placeholder.markdown(f"Error: {e}")
-        st.session_state.history.append({"role": "assistant", "content": f"Error: {e}"})
+if submitted:
+    if len(prompt.strip()) < 1:
+        st.warning("Prompt cannot be blank.")
     else:
-        if isinstance(data, dict) and "answers" in data:
-            st.success("Received multiple candidates")
-            choice = st.radio(
-                "Pick an answer to keep in the chat:", data["answers"], index=0
-            )
-            placeholder.markdown(choice)
-            st.session_state.history.append(
-                {
-                    "role": "assistant",
-                    "content": choice,  # pyright: ignore[reportArgumentType]
-                }
-            )
-        elif isinstance(data, dict) and "answer" in data:
-            placeholder.markdown(data["answer"])
-            st.session_state.history.append(
-                {"role": "assistant", "content": data["answer"]}
-            )
-        else:
-            text = data if isinstance(data, str) else json.dumps(data)
-            placeholder.markdown(text)
-            st.session_state.history.append({"role": "assistant", "content": text})
+        payload = {
+            "messages": [{"role": "user", "content": prompt}],
+            "response_type": response_type.lower().replace(" ", "_"),
+        } | settings
+
+        if payload["seed"] == 0:
+            payload["seed"] = None
+
+        s = (
+            payload.get("stop") or ""
+        ).strip()  # pyright: ignore[reportAttributeAccessIssue]
+        payload["stop"] = (
+            None if not s else [w.strip() for w in s.split(",") if w.strip()]
+        )
+
+        url = f"{API_BASE_URL}structured"
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                r = client.post(url=url, json=payload)
+                r.raise_for_status()
+                data = r.json()
+                st.success("Success")
+                st.json(data)
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+st.markdown(
+    """
+### Tips
+ - SmolLM2 has a tendency to get stuck in a loop that repeat the same words or phrases. If you get HTTP error '422 Unprocessable Content' try a higher 'frequency penalty'
+"""
+)

@@ -58,6 +58,7 @@ coverage.xml
 *.bak
 docker-compose.override.yml
 .env
+.env.docker
 .devcontainer/
 
 # Build artifacts
