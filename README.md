@@ -66,13 +66,13 @@ docker compose up --build
 
 Local environment variables:
 - `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
-- `DMR_BASE_URL` → model API base (default: `http://localhost:12434/engines/llama.cpp/v1/chat/completions`)  
+- `DMR_BASE_URL` → model API base (default: `http://localhost:12434/engines/llama.cpp/v1`)  
 - `DMR_API_KEY` → API key (use `dmr` for Docker Model Runner)  
 - `API_BASE_URL` → backend URL for FastAPI (default: `http://localhost:8000`)
 
 Docker environment variables:
 - `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
-- `DMR_BASE_URL` → model API base (default: `http://model-runner.docker.internal/engines/v1/chat/completions`)  
+- `DMR_BASE_URL` → model API base (default: `http://model-runner.docker.internal/engines/v1`)  
 - `DMR_API_KEY` → API key (use `dmr` for Docker Model Runner)  
 - `API_BASE_URL` → backend URL for FastAPI (default: `http://api:8000`)
 ---
