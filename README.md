@@ -5,6 +5,8 @@ SmolChat is a lightweight chat interface powered by [FastAPI](https://fastapi.ti
 It provides a simple way to interact with small open-source LLMs like **SmolLM2**, exposing an OpenAI-compatible `/chat/completions` API and a Streamlit web UI. The app
 allows you to adjust all of the input parameters given to the model and shows how to obtain structured JSON output from the model.
 
+the purpose of this project is to explore the capabilities of "small" LLMs that can be comfortably run on average consumer hardware.
+
 ---
 
 ## Features
@@ -23,8 +25,7 @@ allows you to adjust all of the input parameters given to the model and shows ho
   - Accesses the model from docker model runner through TCP
 
 - **Dockerized deployment**  
-  - Separate backend (`api`) and frontend (`ui`) containers.  
-  - Hot-reload support in development via mounted volumes.
+  - Separate backend (`api`) and frontend (`ui`) containers built with docker compose.
 
 ---
 
@@ -33,12 +34,10 @@ allows you to adjust all of the input parameters given to the model and shows ho
 ### Local
 Run each service individually:
 ```bash
-# Docker containers
-docker compose up --build
-```
-```bash
 # FastAPI
 uvicorn backend.main:app
+```
+```bash
 # Streamlit
 streamlit run frontend/app.py
 ```
@@ -56,12 +55,11 @@ docker compose up --build
 
 ## Configuration
 
-Environment variables:
-- `MODEL_ID` → model name (default: `smollm2`)  
-- `DMR_BASE_URL` → model API base (default: `http://model-runner:3000/v1`)  
+Local Environment variables:
+- `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
+- `DMR_BASE_URL` → model API base (default: `http://model-runner.docker.internal/engines/llama.cpp/v1/chat/completions`)  
 - `DMR_API_KEY` → API key (use `dmr` for Docker Model Runner)  
-- `API_BASE_URL` → backend URL for Streamlit UI (default: `http://api:8000`)  
-
+- `API_BASE_URL` → backend URL for FastAPI (default: `http://localhost:8000`)
 ---
 
 ## Roadmap
