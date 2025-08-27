@@ -40,6 +40,9 @@ If not developing in a container:
 - Enable host-side TCP support with port `12434`
 - Add the API address to CORS Allowed Origins (`http://localhost:8000`)
 
+Pull the local model that will be used from Docker Hub.
+This project has been primarily tested with SmolLM2-360M.
+
 ### Local
 Run each service individually:
 ```bash
@@ -80,7 +83,7 @@ Docker environment variables:
 ## Roadmap
 
 ### Phase 1 – Core Chat  
-- [x] Implement OpenAI-compatible `/chat/completions` endpoint.  
+- [x] Implement OpenAI-compatible `/chat` endpoint.  
 - [x] Provide Streamlit-based chat UI.  
 - [x] Dockerize backend and frontend with `docker compose`.
 
