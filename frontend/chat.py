@@ -2,13 +2,10 @@ import json
 import httpx
 import streamlit as st
 from typing import Any
-from ui_defaults import DV
-from settings import get_settings
+from ui_defaults import DV, API_BASE_URL, MODEL_NAME
 
-API_BASE_URL = get_settings().API_BASE_URL
-
-st.set_page_config("SmolLM2 Chat", layout="centered")
-st.title("SmolLM2 — Chat")
+st.set_page_config(f"{MODEL_NAME} Chat", layout="centered")
+st.title(f"{MODEL_NAME} — Chat")
 
 if "history" not in st.session_state:
     st.session_state.history = [

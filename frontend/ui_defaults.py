@@ -1,4 +1,9 @@
 from typing import Any
+from settings import get_settings
+
+API_BASE_URL = get_settings().API_BASE_URL
+MODEL_ID: str = get_settings().MODEL_ID
+MODEL_NAME = MODEL_ID.lstrip('ai/').split(':')[0]
 
 DV: dict[str, Any] = {
     "seed": 0,

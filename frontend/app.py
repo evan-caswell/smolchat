@@ -1,7 +1,7 @@
 import streamlit as st
-from ui_defaults import DV
+from ui_defaults import MODEL_NAME
 
-chat = st.Page("chat.py", title="Chat with SmolLM2")
+chat = st.Page("chat.py", title=f"Chat with {MODEL_NAME}")
 structured_output = st.Page("structured.py", title="Structured Output")
 
 pg = st.navigation([chat, structured_output])

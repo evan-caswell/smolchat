@@ -1,13 +1,10 @@
 import streamlit as st
 import httpx
 from typing import Any
-from ui_defaults import DV
-from settings import get_settings
+from ui_defaults import DV, API_BASE_URL, MODEL_NAME
 
-API_BASE_URL = get_settings().API_BASE_URL
-
-st.set_page_config(page_title="SmolLM2 - Structured Output", layout="centered")
-st.title("SmolLM2 - Structured Output")
+st.set_page_config(page_title=f"{MODEL_NAME} - Structured Output", layout="centered")
+st.title(f"{MODEL_NAME} - Structured Output")
 
 with st.sidebar:
     st.header("Schema")
