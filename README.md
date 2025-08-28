@@ -1,6 +1,6 @@
 # SmolChat
 
-SmolChat is a lightweight chat interface powered by [FastAPI](https://fastapi.tiangolo.com/), [Streamlit](https://streamlit.io/), and [Docker Model Runner (DMR)](https://github.com/docker-model-runner).  
+SmolChat is a lightweight chat interface powered by [FastAPI](https://fastapi.tiangolo.com/), [Streamlit](https://streamlit.io/), and [Docker Model Runner (DMR)](https://github.com/docker/model-runner).  
 
 It provides a simple way to interact with small open-source LLMs like **SmolLM2**, exposing an OpenAI-compatible `/chat` API and a Streamlit web UI. The app
 allows you to adjust all of the input parameters given to the model and shows how to obtain structured JSON output from the model.
