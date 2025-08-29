@@ -2,7 +2,16 @@ import streamlit as st
 import httpx
 import json
 from typing import Any
-from ui_defaults import DV, API_BASE_URL, MODEL_NAME, RECIPE_EXAMPLE, EVENT_EXAMPLE
+from ui_defaults import (
+    DV,
+    API_BASE_URL,
+    MODEL_NAME,
+    RECIPE_EXAMPLE,
+    RECIPE_MD,
+    EVENT_EXAMPLE,
+    EVENT_MD,
+    TIPS_MD,
+)
 
 st.set_page_config(page_title=f"{MODEL_NAME} - Structured Output", layout="centered")
 st.title(f"{MODEL_NAME} - Structured Output")
@@ -112,22 +121,9 @@ with st.sidebar:
 settings = {k: st.session_state[k] for k in DV.keys()}
 
 with st.popover("Schema Info"):
-    st.markdown(
-        """## Recipe
-Generates recipe ingredients in JSON format\n
-Prompt: `Give me a recipe for Texas style chili.`\n
-Output:
-"""
-    )
+    st.markdown(RECIPE_MD)
     st.json(RECIPE_EXAMPLE)
-    st.markdown(
-        """
-## Event
-Extracts an event from a prompt\n
-Prompt: `Everyone is excited for John's birthday. Joe and Sally are bringing desserts, and Mary is bringing a casserole. It's hard to believe he was born 18 years ago—September 8th will always be a special day.`\n
-Output:
-"""
-    )
+    st.markdown(EVENT_MD)
     st.json(EVENT_EXAMPLE)
 
 with st.form(key="prompt_form", clear_on_submit=True):
@@ -165,9 +161,4 @@ if submitted:
             st.error(f"Error: {e}")
 
 with st.popover("Tips"):
-    st.markdown(
-        """
-### Tips
- - SmolLM2 has a tendency to get stuck in a loop that repeat the same words or phrases. If you get HTTP error '422 Unprocessable Content' try a higher 'frequency penalty'
-"""
-    )
+    st.markdown(TIPS_MD)
