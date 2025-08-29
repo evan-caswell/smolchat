@@ -4,7 +4,7 @@ from settings import get_settings
 
 API_BASE_URL = get_settings().API_BASE_URL
 MODEL_ID: str = get_settings().MODEL_ID
-MODEL_NAME = MODEL_ID.lstrip('ai/').split(':')[0]
+MODEL_NAME = MODEL_ID.lstrip("ai/").split(":")[0]
 
 DV: dict[str, Any] = {
     "seed": 0,
@@ -27,8 +27,14 @@ DV: dict[str, Any] = {
     "mirostat_eta": 0.1,
 }
 
+RECIPE_MD = """## Recipe
+Generates recipe ingredients in JSON format\n
+Prompt: `Give me a recipe for Texas style chili.`\n
+Output:
+"""
+
 RECIPE_EXAMPLE = json.loads(
-        """{
+    """{
 "recipe_name": "Texas Style Chili",
 "ingredients": [
 "1 can (14.5 oz) diced tomatoes",
@@ -43,9 +49,16 @@ RECIPE_EXAMPLE = json.loads(
 "2 cups shredded cheddar cheese"
 ]
 }"""
-    )
+)
+
+EVENT_MD = """## Event
+Extracts an event from a prompt\n
+Prompt: `Everyone is excited for John's birthday. Joe and Sally are bringing desserts, and Mary is bringing a casserole. It's hard to believe he was born 18 years ago—September 8th will always be a special day.`\n
+Output:
+"""
+
 EVENT_EXAMPLE = json.loads(
-        """{
+    """{
 "event_name": "John's Birthday",
 "event_date": "September 8th",
 "participants": [
@@ -54,4 +67,8 @@ EVENT_EXAMPLE = json.loads(
 "Mary"
   ]
 }"""
-    )
+)
+
+TIPS_MD = """### Tips
+ - SmolLM2 has a tendency to get stuck in a loop that repeats the same words or phrases. If you get the error 'Invalid structured JSON' try a higher 'frequency penalty'
+"""

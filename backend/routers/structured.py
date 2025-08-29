@@ -50,7 +50,9 @@ async def get_structured_response(req: LLMRequest):
         text = data["choices"][0]["message"]["content"]
         parsed = json.loads(text)
         obj = model_cls.model_validate(parsed)  # Validate against Pydantic model
+        return obj.model_dump()
     except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Invalid structured JSON: {e}")
-
-    return obj.model_dump()
+        return {
+            "error": f"Invalid structured JSON: {str(e)}",
+            "raw_output": text,  # pyright: ignore[reportPossiblyUnboundVariable]
+        }

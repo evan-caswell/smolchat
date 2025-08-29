@@ -2,7 +2,16 @@ import streamlit as st
 import httpx
 import json
 from typing import Any
-from ui_defaults import DV, API_BASE_URL, MODEL_NAME, RECIPE_EXAMPLE, EVENT_EXAMPLE
+from ui_defaults import (
+    DV,
+    API_BASE_URL,
+    MODEL_NAME,
+    RECIPE_EXAMPLE,
+    RECIPE_MD,
+    EVENT_EXAMPLE,
+    EVENT_MD,
+    TIPS_MD,
+)
 
 st.set_page_config(page_title=f"{MODEL_NAME} - Structured Output", layout="centered")
 st.title(f"{MODEL_NAME} - Structured Output")
@@ -111,24 +120,14 @@ with st.sidebar:
 # Example: get current settings as a dict
 settings = {k: st.session_state[k] for k in DV.keys()}
 
-with st.popover("Schema Info"):
-    st.markdown(
-        """## Recipe
-Generates recipe ingredients in JSON format\n
-Prompt: `Give me a recipe for Texas style chili.`\n
-Output:
-"""
-    )
+with st.expander("Schema Info"):
+    st.markdown(RECIPE_MD)
     st.json(RECIPE_EXAMPLE)
-    st.markdown(
-        """
-## Event
-Extracts an event from a prompt\n
-Prompt: `Everyone is excited for John's birthday. Joe and Sally are bringing desserts, and Mary is bringing a casserole. It's hard to believe he was born 18 years ago—September 8th will always be a special day.`\n
-Output:
-"""
-    )
+    st.markdown(EVENT_MD)
     st.json(EVENT_EXAMPLE)
+
+with st.expander("Tips"):
+    st.markdown(TIPS_MD)
 
 with st.form(key="prompt_form", clear_on_submit=True):
     prompt = st.text_area("Prompt")
@@ -159,15 +158,11 @@ if submitted:
                 r = client.post(url=url, json=payload)
                 r.raise_for_status()
                 data = r.json()
-                st.success("Success")
-                st.json(data)
+                if data.get("error"):
+                    st.error(f"{data['error']}. See Tips above for help.")
+                    st.write(data["raw_output"])
+                else:
+                    st.success("Success")
+                    st.json(data)
         except Exception as e:
             st.error(f"Error: {e}")
-
-with st.popover("Tips"):
-    st.markdown(
-        """
-### Tips
- - SmolLM2 has a tendency to get stuck in a loop that repeat the same words or phrases. If you get HTTP error '422 Unprocessable Content' try a higher 'frequency penalty'
-"""
-    )
