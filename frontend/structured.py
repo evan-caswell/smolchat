@@ -158,7 +158,11 @@ if submitted:
                 r = client.post(url=url, json=payload)
                 r.raise_for_status()
                 data = r.json()
-                st.success("Success")
-                st.json(data)
+                if data.get("error"):
+                    st.error(f"{data['error']}. See Tips above for help.")
+                    st.write(data["raw_output"])
+                else:
+                    st.success("Success")
+                    st.json(data)
         except Exception as e:
             st.error(f"Error: {e}")

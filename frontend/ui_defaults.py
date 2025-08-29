@@ -70,5 +70,5 @@ EVENT_EXAMPLE = json.loads(
 )
 
 TIPS_MD = """### Tips
- - SmolLM2 has a tendency to get stuck in a loop that repeat the same words or phrases. If you get HTTP error '422 Unprocessable Content' try a higher 'frequency penalty'
+ - SmolLM2 has a tendency to get stuck in a loop that repeats the same words or phrases. If you get the error 'Invalid structured JSON' try a higher 'frequency penalty'
 """
