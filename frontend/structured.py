@@ -120,11 +120,14 @@ with st.sidebar:
 # Example: get current settings as a dict
 settings = {k: st.session_state[k] for k in DV.keys()}
 
-with st.popover("Schema Info"):
+with st.expander("Schema Info"):
     st.markdown(RECIPE_MD)
     st.json(RECIPE_EXAMPLE)
     st.markdown(EVENT_MD)
     st.json(EVENT_EXAMPLE)
+
+with st.expander("Tips"):
+    st.markdown(TIPS_MD)
 
 with st.form(key="prompt_form", clear_on_submit=True):
     prompt = st.text_area("Prompt")
@@ -159,6 +162,3 @@ if submitted:
                 st.json(data)
         except Exception as e:
             st.error(f"Error: {e}")
-
-with st.popover("Tips"):
-    st.markdown(TIPS_MD)
