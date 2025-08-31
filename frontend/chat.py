@@ -11,13 +11,17 @@ if "history" not in st.session_state:
     st.session_state.history = [
         {"role": "system", "content": "You are a helpful assistant."}
     ]
-
+if "pending_answers" not in st.session_state:
+    st.session_state.pending_answers = None
 
 with st.sidebar:
     if st.button("Reset Chat", use_container_width=True):
         st.session_state.history = [
             {"role": "system", "content": "You are a helpful assistant."}
         ]
+        # Clear any pending multi-answer selection state
+        st.session_state.pending_answers = None
+        st.session_state.pop("candidate_choice", None)
         st.rerun()
 
     st.header("Model Settings")
@@ -71,7 +75,7 @@ with st.sidebar:
         step=1,
         value=DV["n"],
         key="n",
-        disabled=True,
+        # disabled=True,
     )
     st.checkbox("Stream", value=DV["stream"], key="stream", disabled=True)
     st.number_input("Top K", min_value=0, step=1, value=DV["top_k"], key="top_k")
@@ -132,9 +136,7 @@ if prompt:
         placeholder.markdown("_thinking…_")
 
     settings: dict[str, Any] = {k: st.session_state[k] for k in DV.keys()}
-    payload = {
-        "messages": st.session_state.history,
-    } | settings
+    payload = {"messages": st.session_state.history} | settings
 
     if payload["seed"] == 0:
         payload["seed"] = None
@@ -155,23 +157,32 @@ if prompt:
         st.session_state.history.append({"role": "assistant", "content": f"Error: {e}"})
     else:
         if isinstance(data, dict) and "answers" in data:
-            st.success("Received multiple candidates")
-            choice = st.radio(
-                "Pick an answer to keep in the chat:", data["answers"], index=0
-            )
-            placeholder.markdown(choice)
-            st.session_state.history.append(
-                {
-                    "role": "assistant",
-                    "content": choice,  # pyright: ignore[reportArgumentType]
-                }
-            )
-        elif isinstance(data, dict) and "answer" in data:
-            placeholder.markdown(data["answer"])
-            st.session_state.history.append(
-                {"role": "assistant", "content": data["answer"]}
-            )
+            # Persist candidates and render a chooser after this block
+            st.session_state.pending_answers = data["answers"]
+            placeholder.markdown("Please make a selection")
         else:
             text = data if isinstance(data, str) else json.dumps(data)
             placeholder.markdown(text)
             st.session_state.history.append({"role": "assistant", "content": text})
+
+# Render pending multi-answer chooser outside of the prompt block so it persists across reruns
+if st.session_state.pending_answers:
+    # with st.chat_message("assistant"):
+    st.success("Received multiple candidates")
+    with st.form("pick_answer"):
+        choice = st.radio(
+            "Pick an answer to keep in the chat:",
+            st.session_state.pending_answers,  # type: ignore
+            index=0,
+            key="candidate_choice",
+        )
+        submitted = st.form_submit_button("Confirm")
+
+    if submitted:
+        # Append the chosen answer to history and clear chooser state
+        st.session_state.history.append(
+            {"role": "assistant", "content": choice}  # pyright: ignore[reportArgumentType]
+        )
+        st.session_state.pending_answers = None
+        st.session_state.pop("candidate_choice", None)
+        st.rerun()

@@ -72,7 +72,7 @@ with st.sidebar:
         step=1,
         value=DV["n"],
         key="n",
-        disabled=True,
+        # disabled=True,
     )
     st.checkbox("Stream", value=DV["stream"], key="stream", disabled=True)
     st.number_input("Top K", min_value=0, step=1, value=DV["top_k"], key="top_k")
@@ -158,11 +158,13 @@ if submitted:
                 r = client.post(url=url, json=payload)
                 r.raise_for_status()
                 data = r.json()
-                if data.get("error"):
+                if isinstance(data, dict) and data.get("error"):
                     st.error(f"{data['error']}. See Tips above for help.")
                     st.write(data["raw_output"])
                 else:
                     st.success("Success")
-                    st.json(data)
+                    for idx, returned_json in enumerate(data):
+                        st.markdown(f"### Response {idx+1}")
+                        st.json(returned_json)
         except Exception as e:
             st.error(f"Error: {e}")

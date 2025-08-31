@@ -46,13 +46,26 @@ async def get_structured_response(req: LLMRequest):
     clean = req.model_copy(update={"messages": all_messages, "response_schema": schema})
     data = await llm_generate_content(clean)
 
+    responses = []
     try:
-        text = data["choices"][0]["message"]["content"]
-        parsed = json.loads(text)
-        obj = model_cls.model_validate(parsed)  # Validate against Pydantic model
-        return obj.model_dump()
+        texts = data["choices"]
+        for text in texts:
+            try:
+                parsed = json.loads(text["message"]["content"])
+                obj = model_cls.model_validate(parsed)
+                responses.append(obj)
+            except Exception as e:
+                responses.append(
+                    {
+                        "error": f"Invalid structured JSON: {str(e)}. See Tips for help",
+                        "raw_output": text,  # pyright: ignore[reportPossiblyUnboundVariable]
+                    }
+                )
+
     except Exception as e:
         return {
-            "error": f"Invalid structured JSON: {str(e)}",
+            "error": f"Invalid model response. Response does not contain 'choices': {str(e)}",
             "raw_output": text,  # pyright: ignore[reportPossiblyUnboundVariable]
         }
+    else:
+        return responses

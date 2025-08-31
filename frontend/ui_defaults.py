@@ -16,7 +16,7 @@ DV: dict[str, Any] = {
     "stop": "",
     "n": 1,
     "stream": False,
-    "top_k": 40,
+    "top_k": 50,
     "min_p": 0.05,
     "typical_p": 1.0,
     "tfs_z": 1.0,

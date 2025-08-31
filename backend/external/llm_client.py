@@ -1,4 +1,5 @@
 import httpx
+import asyncio
 from typing import Any
 from backend.schemas.chat import LLMRequest
 from backend.settings import get_settings
@@ -57,7 +58,47 @@ async def llm_generate_content(req: LLMRequest):
         }
 
     url = f"{settings.DMR_BASE_URL}/chat/completions"
+
+    # Docker Model Runner's chat completions endpoint does not accept n > 1.
+    # Normalize each request to n=1 and, if multiple results are desired,
+    # issue that many parallel single-result calls to collect responses.
+    target_n = max(1, int(payload.get("n") or 1))
+    payload_single = {**payload, "n": 1}
+
     async with httpx.AsyncClient(timeout=60.0) as client:
-        r = await client.post(url, headers=HEADERS, json=payload)
-        r.raise_for_status()
-        return r.json()
+        if target_n == 1:
+            r = await client.post(url, headers=HEADERS, json=payload_single)
+            r.raise_for_status()
+            return r.json()
+
+        async def one_call():
+            resp = await client.post(url, headers=HEADERS, json=payload_single)
+            resp.raise_for_status()
+            return resp.json()
+
+        responses = await asyncio.gather(*[one_call() for _ in range(target_n)])
+
+        # Base the combined response on the first, then merge choices and (if present) usage.
+        base = responses[0]
+        combined_choices = []
+        for resp in responses:
+            combined_choices.extend(resp.get("choices", []))
+        base["choices"] = combined_choices
+
+        # Best-effort usage aggregation if available.
+        if all("usage" in r for r in responses):
+            usage_keys = set().union(
+                *[
+                    r["usage"].keys()
+                    for r in responses
+                    if isinstance(r.get("usage"), dict)
+                ]
+            )
+            agg = {k: 0 for k in usage_keys}
+            for r in responses:
+                for k, v in (r.get("usage") or {}).items():
+                    if isinstance(v, (int, float)):
+                        agg[k] = agg.get(k, 0) + v # pyright: ignore[reportArgumentType]
+            base["usage"] = agg
+
+        return base

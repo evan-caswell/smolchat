@@ -3,3 +3,4 @@ fastapi
 pydantic
 pydantic-settings
 uvicorn
+asyncio
