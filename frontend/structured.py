@@ -74,7 +74,6 @@ with st.sidebar:
         key="n",
         # disabled=True,
     )
-    st.checkbox("Stream", value=DV["stream"], key="stream", disabled=True)
     st.number_input("Top K", min_value=0, step=1, value=DV["top_k"], key="top_k")
     st.slider("Min P", 0.0, 1.0, step=0.01, value=DV["min_p"], key="min_p")
     st.slider("Typical P", 0.0, 1.0, step=0.1, value=DV["typical_p"], key="typical_p")

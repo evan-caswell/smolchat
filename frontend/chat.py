@@ -14,6 +14,20 @@ if "history" not in st.session_state:
 if "pending_answers" not in st.session_state:
     st.session_state.pending_answers = None
 
+
+def _on_stream_change():
+    if st.session_state.stream:
+        st.session_state.n = 1
+
+
+def _on_n_change():
+    if st.session_state.n > 1:
+        st.session_state.stream = False
+
+
+disable_n = st.session_state.get("stream", False)
+disable_stream = st.session_state.get("n", 1) > 1
+
 with st.sidebar:
     if st.button("Reset Chat", use_container_width=True):
         st.session_state.history = [
@@ -75,9 +89,16 @@ with st.sidebar:
         step=1,
         value=DV["n"],
         key="n",
-        # disabled=True,
+        disabled=disable_n,
+        on_change=_on_n_change,
     )
-    st.checkbox("Stream", value=DV["stream"], key="stream", disabled=True)
+    st.checkbox(
+        "Stream",
+        value=DV["stream"],
+        key="stream",
+        disabled=disable_stream,
+        on_change=_on_stream_change,
+    )
     st.number_input("Top K", min_value=0, step=1, value=DV["top_k"], key="top_k")
     st.slider("Min P", 0.0, 1.0, step=0.01, value=DV["min_p"], key="min_p")
     st.slider("Typical P", 0.0, 1.0, step=0.1, value=DV["typical_p"], key="typical_p")
@@ -120,6 +141,8 @@ with st.sidebar:
         key="mirostat_eta",
     )
 
+print(st.session_state.history)
+
 for msg in st.session_state.history:
     if msg["role"] != "system":
         with st.chat_message(msg["role"]):
@@ -146,24 +169,39 @@ if prompt:
     ).strip()  # pyright: ignore[reportAttributeAccessIssue]
     payload["stop"] = None if not s else [w.strip() for w in s.split(",") if w.strip()]
 
-    url = f"{API_BASE_URL}chat"
-    try:
-        with httpx.Client(timeout=60.0) as client:
-            r = client.post(url=url, json=payload)
-            r.raise_for_status()
-            data = r.json()
-    except Exception as e:
-        placeholder.markdown(f"Error: {e}")
-        st.session_state.history.append({"role": "assistant", "content": f"Error: {e}"})
+    if st.session_state.stream:
+        url = f"{API_BASE_URL}chat/stream"
+        running_text = ""
+        try:
+            with httpx.stream("POST", url, json=payload, timeout=None) as r:
+                r.raise_for_status()
+                for piece in r.iter_text():
+                    running_text += piece
+                    placeholder.markdown(running_text)
+            st.session_state.history.append({"role": "assistant", "content": running_text})
+        except Exception as e:
+            st.error(f"Streaming error: {e}")
     else:
-        if isinstance(data, dict) and "answers" in data:
-            # Persist candidates and render a chooser after this block
-            st.session_state.pending_answers = data["answers"]
-            placeholder.markdown("Please make a selection")
+        url = f"{API_BASE_URL}chat"
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                r = client.post(url=url, json=payload)
+                r.raise_for_status()
+                data = r.json()
+        except Exception as e:
+            placeholder.markdown(f"Error: {e}")
+            st.session_state.history.append(
+                {"role": "assistant", "content": f"Error: {e}"}
+            )
         else:
-            text = data if isinstance(data, str) else json.dumps(data)
-            placeholder.markdown(text)
-            st.session_state.history.append({"role": "assistant", "content": text})
+            if isinstance(data, dict) and "answers" in data:
+                # Persist candidates and render a chooser after this block
+                st.session_state.pending_answers = data["answers"]
+                placeholder.markdown("Please make a selection")
+            else:
+                text = data if isinstance(data, str) else json.dumps(data)
+                placeholder.markdown(text)
+                st.session_state.history.append({"role": "assistant", "content": text})
 
 # Render pending multi-answer chooser outside of the prompt block so it persists across reruns
 if st.session_state.pending_answers:
@@ -181,7 +219,10 @@ if st.session_state.pending_answers:
     if submitted:
         # Append the chosen answer to history and clear chooser state
         st.session_state.history.append(
-            {"role": "assistant", "content": choice}  # pyright: ignore[reportArgumentType]
+            {
+                "role": "assistant",
+                "content": choice,  # pyright: ignore[reportArgumentType]
+            }
         )
         st.session_state.pending_answers = None
         st.session_state.pop("candidate_choice", None)

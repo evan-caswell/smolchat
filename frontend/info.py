@@ -48,7 +48,7 @@ Define the format, length, and boundaries of the output.
 Affect how completions are delivered.
 
 * `n: int` → number of completions to generate.
-* `stream: bool` → return tokens incrementally. *(Not yet implemented)*
+* `stream: bool` → return tokens incrementally.
 * `seed: int | None` → RNG seed for reproducibility.
 
 ---
