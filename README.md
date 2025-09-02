@@ -92,7 +92,7 @@ Docker environment variables:
 - [x] Validate data sent from the from the frontend using Pydantic
 
 ### Phase 3 - Unit Tests
-- [ ] Add unit tests (pytest)
+- [x] Add unit tests (pytest)
 
 ### Phase 4 – Tool Use Integration  
 - [ ] Add support for **function calling** (OpenAI-style `functions` and `tool_calls`) in backend schemas.  
