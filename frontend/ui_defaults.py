@@ -4,8 +4,10 @@ from settings import get_settings
 
 API_BASE_URL = get_settings().API_BASE_URL
 MODEL_ID: str = get_settings().MODEL_ID
+# Derive a friendly model name from IDs like "ai/<repo>:<tag>".
 MODEL_NAME = MODEL_ID.lstrip("ai/").split(":")[0]
 
+# UI defaults for model settings; also the canonical settings key set.
 DV: dict[str, Any] = {
     "seed": 0,
     "temperature": 0.8,

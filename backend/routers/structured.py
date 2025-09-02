@@ -6,7 +6,7 @@ from backend.external.llm_client import llm_generate_content
 
 router = APIRouter(prefix="/structured", tags=["structured"])
 
-# Map a client-supplied response_type -> (Pydantic model to validate against, task prompt to guide the LLM).
+# Registry of structured tasks: map response_type -> (Pydantic model, task prompt).
 RESPONSE_TYPES = {
     "recipe": (Recipe, "You should give the requested recipe and ingredients."),
     "event": (
@@ -22,16 +22,8 @@ Do NOT include backticks, comments, HTML tags, markdown, or any extra text.
 
 
 @router.post("")
-async def get_structured_response(req: LLMRequest):
-    """
-    Run a structured LLM task and return a Pydantic-validated object.
-
-    Validates `req.response_type` against `RESPONSE_TYPES`, builds a system message
-    from `SYSTEM_PROMPT` plus the task prompt, injects the target model's JSON Schema
-    via `response_format`, calls the upstream chat completion API, then parses the
-    first choice's message content as JSON and validates it with the selected
-    Pydantic model.
-    """
+async def get_structured_response(req: LLMRequest) -> list[object] | dict[str, object]:
+    """Run a structured LLM task and return validated objects or an error."""
     if not req.response_type or req.response_type not in RESPONSE_TYPES:
         raise HTTPException(status_code=400, detail="Unknown response_type")
 
@@ -46,7 +38,7 @@ async def get_structured_response(req: LLMRequest):
     clean = req.model_copy(update={"messages": all_messages, "response_schema": schema})
     data = await llm_generate_content(clean)
 
-    responses = []
+    responses: list[object] = []
     try:
         texts = data["choices"]
         for text in texts:
@@ -58,14 +50,17 @@ async def get_structured_response(req: LLMRequest):
                 responses.append(
                     {
                         "error": f"Invalid structured JSON: {str(e)}. See Tips for help",
-                        "raw_output": text,  # pyright: ignore[reportPossiblyUnboundVariable]
+                        "raw_output": text,
                     }
                 )
 
     except Exception as e:
         return {
-            "error": f"Invalid model response. Response does not contain 'choices': {str(e)}",
-            "raw_output": text,  # pyright: ignore[reportPossiblyUnboundVariable]
+            "error": (
+                "Invalid model response. Response does not contain 'choices': "
+                f"{str(e)}"
+            ),
+            "raw_output": data,
         }
     else:
         return responses

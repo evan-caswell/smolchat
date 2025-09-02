@@ -19,6 +19,7 @@ st.title(f"{MODEL_NAME} - Structured Output")
 with st.sidebar:
     st.header("Schema")
     response_type = st.radio("Response type", ["Recipe", "Event"])
+    # UI label is Title Case; convert to snake_case when building response_type for the API.
 
     st.divider()
     st.header("Model Settings")
@@ -144,9 +145,8 @@ if submitted:
         if payload["seed"] == 0:
             payload["seed"] = None
 
-        s = (
-            payload.get("stop") or ""
-        ).strip()  # pyright: ignore[reportAttributeAccessIssue]
+        # Normalize comma-separated stop sequences into a list; empty string -> None.
+        s: str = str(payload.get("stop") or "").strip()
         payload["stop"] = (
             None if not s else [w.strip() for w in s.split(",") if w.strip()]
         )

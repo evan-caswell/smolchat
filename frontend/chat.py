@@ -1,7 +1,7 @@
 import json
 import httpx
 import streamlit as st
-from typing import Any
+from typing import Any, cast
 from ui_defaults import DV, API_BASE_URL, MODEL_NAME
 
 st.set_page_config(f"{MODEL_NAME} Chat", layout="centered")
@@ -15,12 +15,14 @@ if "pending_answers" not in st.session_state:
     st.session_state.pending_answers = None
 
 
-def _on_stream_change():
+def _on_stream_change() -> None:
+    """Ensure `n` stays 1 when streaming is enabled."""
     if st.session_state.stream:
         st.session_state.n = 1
 
 
-def _on_n_change():
+def _on_n_change() -> None:
+    """Disable streaming when requesting multiple responses."""
     if st.session_state.n > 1:
         st.session_state.stream = False
 
@@ -164,9 +166,7 @@ if prompt:
     if payload["seed"] == 0:
         payload["seed"] = None
 
-    s = (
-        payload.get("stop") or ""
-    ).strip()  # pyright: ignore[reportAttributeAccessIssue]
+    s: str = str(payload.get("stop") or "").strip()
     payload["stop"] = None if not s else [w.strip() for w in s.split(",") if w.strip()]
 
     if st.session_state.stream:
@@ -175,10 +175,13 @@ if prompt:
         try:
             with httpx.stream("POST", url, json=payload, timeout=None) as r:
                 r.raise_for_status()
+                # Stream tokens and update the placeholder for a live typing effect.
                 for piece in r.iter_text():
                     running_text += piece
                     placeholder.markdown(running_text)
-            st.session_state.history.append({"role": "assistant", "content": running_text})
+            st.session_state.history.append(
+                {"role": "assistant", "content": running_text}
+            )
         except Exception as e:
             st.error(f"Streaming error: {e}")
     else:
@@ -205,23 +208,25 @@ if prompt:
 
 # Render pending multi-answer chooser outside of the prompt block so it persists across reruns
 if st.session_state.pending_answers:
-    # with st.chat_message("assistant"):
+    # Persist multi-answer chooser across reruns; selection appends chosen answer to history.
     st.success("Received multiple candidates")
     with st.form("pick_answer"):
+        answers = cast(list[str], st.session_state.pending_answers)
         choice = st.radio(
             "Pick an answer to keep in the chat:",
-            st.session_state.pending_answers,  # type: ignore
+            answers,
             index=0,
             key="candidate_choice",
         )
         submitted = st.form_submit_button("Confirm")
 
     if submitted:
+        selected: str = cast(str, choice)
         # Append the chosen answer to history and clear chooser state
         st.session_state.history.append(
             {
                 "role": "assistant",
-                "content": choice,  # pyright: ignore[reportArgumentType]
+                "content": selected,
             }
         )
         st.session_state.pending_answers = None

@@ -4,3 +4,4 @@ pydantic
 pydantic-settings
 uvicorn
 asyncio
+pytest

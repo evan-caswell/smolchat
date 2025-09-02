@@ -1,6 +1,7 @@
 import streamlit as st
 from ui_defaults import MODEL_NAME, DV
 
+# Seed session state with defaults on first load, then rerun so widgets bind values.
 if "init_ui" not in st.session_state:
     st.session_state.init_ui = False
 

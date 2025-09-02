@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
-# Cache function as env settings will not change
 @lru_cache
-def get_settings():
+def get_settings() -> Settings:
+    """Load frontend settings from environment (cached)."""
     return Settings()  # pyright: ignore[reportCallIssue]
