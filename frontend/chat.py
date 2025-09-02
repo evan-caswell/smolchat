@@ -143,8 +143,6 @@ with st.sidebar:
         key="mirostat_eta",
     )
 
-print(st.session_state.history)
-
 for msg in st.session_state.history:
     if msg["role"] != "system":
         with st.chat_message(msg["role"]):
