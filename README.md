@@ -1,107 +1,154 @@
 # SmolChat
 
-SmolChat is a lightweight chat interface powered by [FastAPI](https://fastapi.tiangolo.com/), [Streamlit](https://streamlit.io/), and [Docker Model Runner (DMR)](https://github.com/docker/model-runner).  
+SmolChat is a lightweight chat interface powered by FastAPI (backend), Streamlit (frontend), and Docker Model Runner (DMR). It lets you chat with small open‑source LLMs (e.g., SmolLM2), tune generation parameters, and request structured JSON output.
 
-It provides a simple way to interact with small open-source LLMs like **SmolLM2**, exposing an OpenAI-compatible `/chat` API and a Streamlit web UI. The app
-allows you to adjust all of the input parameters given to the model and shows how to obtain structured JSON output from the model.
-
-the purpose of this project is to explore the capabilities of "small" LLMs that can be comfortably run on average consumer hardware.
+The goal is to explore what “small” LLMs can do locally on typical hardware.
 
 ---
 
 ## Features
-- **FastAPI backend**  
-  - `/chat` endpoint accepts OpenAI-style chat messages.  
-  - `/structured` endpoint gets structured output from the model.
-  - Health check at `/healthz`.  
-  - Forwards requests to DMR.
+- FastAPI backend:
+  - `/chat` (OpenAI‑style) and `/structured` endpoints
+  - `/healthz` health check
+  - Proxies to Docker Model Runner
+- Streamlit frontend:
+  - Chat UI at `http://localhost:8501`
+  - System/user/assistant roles and usage stats
+- Dockerized dev & run:
+  - Separate `api` and `ui` services with Docker Compose
+  - Uses Compose “models” to run the LLM and inject its endpoint URL
 
-- **Streamlit frontend**  
-  - Simple chat UI at `http://localhost:8501`.  
-  - Supports system / user / assistant roles.  
-  - Displays model responses and usage stats.
+---
 
-- **Local deployment**
-  - Accesses the model from DMR through TCP
+## What changed (Docker, Compose, env)
 
-- **Dockerized deployment**  
-  - Separate backend (`api`) and frontend (`ui`) containers built with Docker Compose.
+The stack now centralizes the model identifier and relies on Compose to inject the model endpoint URL.
+
+- Single source of truth for the model id:
+  - Set `MODEL_ID` once in `.env` (for Compose interpolation) and it’s used in `compose.yaml`, backend, and frontend.
+- Compose models integration:
+  - `compose.yaml` defines a `models.llm` entry with `model: ${MODEL_ID}`.
+  - Under each service, `models.llm.endpoint_var: DMR_BASE_URL` makes Compose inject `DMR_BASE_URL` with the correct URL to the model.
+- Container env files:
+  - `.env.docker` is used for container env defaults (backend URL, API key, etc.).
+
+Key snippet (`compose.yaml`):
+
+```
+services:
+  api:
+    env_file: .env.docker
+    environment:
+      - MODEL_ID=${MODEL_ID}
+    models:
+      llm:
+        endpoint_var: DMR_BASE_URL
+
+  ui:
+    env_file: .env.docker
+    environment:
+      - MODEL_ID=${MODEL_ID}
+
+models:
+  llm:
+    model: ${MODEL_ID}
+    context_size: 8192
+```
+
+With this configuration:
+- Compose injects `DMR_BASE_URL` into the `api` service environment (and you can add the same binding to `ui` if needed).
+- Both services receive `MODEL_ID` explicitly from `${MODEL_ID}`.
 
 ---
 
 ## Quickstart
 
-Ensure Docker Desktop is running, DMR is enabled, and host-side TCP support is enabled:
+Prerequisites
+- Docker Desktop with “Docker Model Runner” enabled
 
-- Settings->Beta Features->Enable Docker Model Runner
+Set your model once in `.env` (project root):
 
-If not developing in a container:
-
-- Enable host-side TCP support with port `12434`
-- Add the API address to CORS Allowed Origins (`http://localhost:8000`)
-
-Pull the local model that will be used from Docker Hub.
-This project has been primarily tested with SmolLM2-360M.
-
-### Local
-Run each service individually:
-```bash
-# FastAPI
-uvicorn backend.main:app
 ```
-```bash
-# Streamlit
-streamlit run frontend/app.py
+MODEL_ID=ai/smollm2:latest
+DMR_API_KEY=dmr-no-key-required
+DMR_BASE_URL=http://localhost:12434/engines/llama.cpp/v1   # for local (non-Docker) runs
+API_BASE_URL=http://localhost:8000                         # for local frontend → backend
 ```
 
-### Docker
-```bash
-# build and run all services
+For Docker runs, containers load defaults from `.env.docker`:
+
+```
+DMR_API_KEY=dmr-no-key-required
+API_BASE_URL=http://api:8000
+MODEL_ID=ai/smollm2:latest
+# DMR_BASE_URL is injected by Compose models as `DMR_BASE_URL`
+```
+
+Run with Docker
+```
 docker compose up --build
 ```
 
-- Backend: http://localhost:8000  
-- Frontend: http://localhost:8501  
+URLs
+- Backend (FastAPI): `http://localhost:8000`
+- Frontend (Streamlit): `http://localhost:8501`
+
+Run locally without Docker (requires a DMR endpoint running on the host)
+```
+# Backend
+uvicorn backend.main:app --host 0.0.0.0 --port 8000
+
+# Frontend
+streamlit run frontend/app.py
+```
+
+Ensure `.env` has a reachable `DMR_BASE_URL` for local runs (for Docker Model Runner TCP, the default is `http://localhost:12434/engines/llama.cpp/v1`).
 
 ---
 
-## Configuration
+## Configuration reference
 
-Local environment variables:
-- `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
-- `DMR_BASE_URL` → model API base (default: `http://localhost:12434/engines/llama.cpp/v1`)  
-- `DMR_API_KEY` → API key (use `dmr` for Docker Model Runner)  
-- `API_BASE_URL` → backend URL for FastAPI (default: `http://localhost:8000`)
+Environment expected by the app:
+- `MODEL_ID`: Model identifier, e.g., `ai/smollm2:latest`
+- `DMR_BASE_URL`: Base URL to the model’s OpenAI‑compatible API
+- `DMR_API_KEY`: API key (for DMR, can be a placeholder like `dmr-no-key-required`)
+- `API_BASE_URL`: Backend URL the frontend calls
 
-Docker environment variables:
-- `MODEL_ID` → model name (default: `ai/smollm2:latest`)  
-- `DMR_BASE_URL` → model API base (default: `http://model-runner.docker.internal/engines/v1`)  
-- `DMR_API_KEY` → API key (use `dmr` for Docker Model Runner)  
-- `API_BASE_URL` → backend URL for FastAPI (default: `http://api:8000`)
+Compose models auto‑injection:
+- When you bind a model under a service with `models:`, Compose creates env vars.
+- In this project, `endpoint_var: DMR_BASE_URL` ensures the container gets `DMR_BASE_URL` automatically.
+
+Switching models (one place)
+- Change `MODEL_ID` in `.env`. That updates the Compose model and the value passed into services.
+- Recreate the stack:
+```
+docker compose up -d --build
+```
+
 ---
 
 ## Roadmap
 
-### Phase 1 – Core Chat  
-- [x] Implement OpenAI-compatible `/chat` endpoint.  
-- [x] Provide Streamlit-based chat UI.  
-- [x] Dockerize backend and frontend with `docker compose`.
+Phase 1 — Core Chat
+- [x] OpenAI‑compatible `/chat`
+- [x] Streamlit UI
+- [x] Dockerized backend and frontend
 
-### Phase 2 – Structured Output and Data Validation 
-- [x] Add support for structured output from the model.
-- [x] Validate data sent from the from the frontend using Pydantic
+Phase 2 — Structured Output and Validation
+- [x] Structured output endpoint
+- [x] Pydantic validation
 
-### Phase 3 - Unit Tests
-- [x] Add unit tests (pytest)
+Phase 3 — Unit Tests
+- [x] Tests (pytest)
 
-### Phase 4 – Tool Use Integration  
-- [ ] Add support for **function calling** (OpenAI-style `functions` and `tool_calls`) in backend schemas.  
-- [ ] Define a standard tool registry (e.g., weather lookup, calculator, file search).  
-- [ ] Implement dynamic dispatch: model chooses tool → backend executes tool → response is returned to model.  
-- [ ] Extend Streamlit UI to visualize tool usage steps.
+Phase 4 — Tool Use Integration
+- [ ] Function calling (`functions`, `tool_calls`)
+- [ ] Tool registry and dispatch
+- [ ] UI visualization of tool steps
 
-### Phase 5 - RAG
-- [ ] Implement RAG (local file QA)
+Phase 5 — RAG
+- [ ] Local file QA
 
-### Phase 6 - UI
-- [ ] Replace Streamlit frontend with React
+Phase 6 — UI
+- [ ] Replace Streamlit with React
+
