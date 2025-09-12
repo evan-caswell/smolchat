@@ -1,5 +1,4 @@
-from typing import Literal, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Recipe(BaseModel):

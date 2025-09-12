@@ -3,9 +3,7 @@ import asyncio
 import json
 from typing import Any, AsyncGenerator
 from backend.schemas.chat import LLMRequest
-from backend.settings import get_settings
-
-settings = get_settings()
+from backend.settings import settings
 
 HEADERS = {
     "Content-Type": "application/json",

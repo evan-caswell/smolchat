@@ -1,7 +1,5 @@
 import streamlit as st
 import httpx
-import json
-from typing import Any
 from ui_defaults import (
     DV,
     API_BASE_URL,
@@ -157,7 +155,7 @@ if submitted:
             None if not s else [w.strip() for w in s.split(",") if w.strip()]
         )
 
-        url = f"{API_BASE_URL}structured"
+        url = f"{API_BASE_URL}/structured"
         try:
             with httpx.Client(timeout=60.0) as client:
                 r = client.post(url=url, json=payload)

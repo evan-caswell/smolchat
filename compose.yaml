@@ -1,31 +1,33 @@
 services:
   api:
-    build: ./backend
-    container_name: smolchat-api
+    build: .
     env_file: .env.docker
     environment:
-      PYTHONPATH: /app            # parent of "backend" is on the path
-      PORT: 8000
-    working_dir: /app
+      - MODEL_ID=${MODEL_ID}
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
-    volumes:
-      - ./backend:/app/backend    # <-- mount under /app/backend
     ports:
       - "8000:8000"
-    networks: [appnet]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://api:8000/healthz" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    models:
+      llm:
+        endpoint_var: DMR_BASE_URL
 
   ui:
-    build: ./frontend
-    container_name: smolchat-ui
+    build: .
     env_file: .env.docker
+    environment:
+      - MODEL_ID=${MODEL_ID}
+    command: streamlit run frontend/app.py --server.address=0.0.0.0 --server.port=8501
     ports:
       - "8501:8501"
     depends_on:
       - api
-    networks: [appnet]
-    volumes:
-      - ./frontend:/app
 
-networks:
-  appnet:
-    driver: bridge
+models:
+  llm:
+    model: ${MODEL_ID}
+    context_size: 8192

@@ -5,3 +5,4 @@ pydantic-settings
 uvicorn
 asyncio
 pytest
+streamlit

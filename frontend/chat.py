@@ -168,7 +168,7 @@ if prompt:
     payload["stop"] = None if not s else [w.strip() for w in s.split(",") if w.strip()]
 
     if st.session_state.stream:
-        url = f"{API_BASE_URL}chat/stream"
+        url = f"{API_BASE_URL}/chat/stream"
         running_text = ""
         try:
             with httpx.stream("POST", url, json=payload, timeout=None) as r:
@@ -183,7 +183,7 @@ if prompt:
         except Exception as e:
             st.error(f"Streaming error: {e}")
     else:
-        url = f"{API_BASE_URL}chat"
+        url = f"{API_BASE_URL}/chat"
         try:
             with httpx.Client(timeout=60.0) as client:
                 r = client.post(url=url, json=payload)

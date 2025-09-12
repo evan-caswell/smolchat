@@ -1,9 +1,9 @@
 import json
 from typing import Any
-from settings import get_settings
+from settings import settings
 
-API_BASE_URL = get_settings().API_BASE_URL
-MODEL_ID: str = get_settings().MODEL_ID
+API_BASE_URL = settings.API_BASE_URL
+MODEL_ID: str = settings.MODEL_ID
 # Derive a friendly model name from IDs like "ai/<repo>:<tag>".
 MODEL_NAME = MODEL_ID.lstrip("ai/").split(":")[0]
 
